@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codice Arcano — D&D 3.5 Database Incantesimi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<script src="db-data.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/sql-wasm.js"></script>
+<style>
+:root {
+  --bg:          #0a0703;
+  --surface:     #110e06;
+  --panel:       #1a1409;
+  --border:      #312210;
+  --border-g:    #4a3418;
+  --gold:        #c9a84c;
+  --gold-lt:     #e8c97a;
+  --gold-dm:     #6b5420;
+  --gold-glow:   rgba(201,168,76,0.15);
+  --purple-lt:   #9b6fd0;
+  --purple-glow: rgba(107,63,160,0.25);
+  --red:         #9a2828;
+  --text:        #e4d09a;
+  --text-m:      #7a6040;
+  --text-d:      #3e2c14;
+  --f-display:   'Cinzel Decorative', 'Cinzel', serif;
+  --f-head:      'Cinzel', serif;
+  --f-body:      'IM Fell English', Georgia, serif;
+  --f-mono:      'Courier Prime', 'Courier New', monospace;
+  --sw: 288px;
+  --dw: 500px;
+  --hh: 58px;
+  --r: 2px;
+  --t: 0.18s ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--f-body); font-size: 15px; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border-g); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dm); }
+
+/* ══ Splash di avvio ══ */
+#splash {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem;
+  background: var(--bg);
+}
+#splash.hidden { display: none; }
+.splash-logo {
+  font-family: var(--f-display);
+  font-size: 1.4rem; color: var(--gold);
+  letter-spacing: .06em;
+  text-shadow: 0 0 30px rgba(201,168,76,.5);
+}
+.splash-sub {
+  font-family: var(--f-body); font-style: italic;
+  font-size: .8rem; color: var(--text-m); letter-spacing: .14em;
+}
+.splash-spin {
+  width: 40px; height: 40px;
+  border: 2px solid var(--border-g); border-top-color: var(--gold);
+  border-radius: 50%; animation: spin .9s linear infinite;
+}
+.splash-msg {
+  font-family: var(--f-head); font-size: .62rem;
+  letter-spacing: .2em; color: var(--text-m);
+}
+
+/* ══ Root grid ══ */
+#app {
+  display: grid;
+  grid-template-columns: var(--sw) 1fr;
+  grid-template-rows: var(--hh) 1fr;
+  height: 100vh;
+}
+#app.hidden { visibility: hidden; }
+
+/* ══ Header ══ */
+#hdr {
+  grid-column: 1/-1;
+  display: flex; align-items: center; padding: 0 1.4rem; gap: 1.2rem;
+  background: var(--surface); border-bottom: 1px solid var(--border-g);
+  position: relative; z-index: 20; flex-shrink: 0;
+}
+#hdr::after {
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent 5%, var(--gold) 40%, var(--gold) 60%, transparent 95%);
+  opacity: .35;
+}
+.hdr-logo { font-family: var(--f-display); font-size: 1rem; color: var(--gold); letter-spacing: .06em; text-shadow: 0 0 24px rgba(201,168,76,.45); white-space: nowrap; flex-shrink: 0; }
+.hdr-logo em { font-family: var(--f-body); font-style: italic; font-size: .7rem; color: var(--text-m); display: block; letter-spacing: .18em; }
+.hdr-sep { width: 1px; height: 28px; background: var(--border-g); flex-shrink: 0; }
+#hdr-stats { font-family: var(--f-mono); font-size: .72rem; color: var(--text-m); flex: 1; }
+#hdr-stats strong { color: var(--gold); }
+
+/* ══ Sidebar ══ */
+#sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: .9rem .8rem;
+  display: flex; flex-direction: column; gap: .75rem;
+}
+.s-block { border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; }
+.s-title { font-family: var(--f-head); font-size: .6rem; letter-spacing: .2em; text-transform: uppercase; color: var(--gold-dm); padding: .45rem .7rem; background: var(--panel); border-bottom: 1px solid var(--border); }
+.s-body { padding: .7rem; display: flex; flex-direction: column; gap: .55rem; }
+
+.lbl { font-family: var(--f-head); font-size: .6rem; letter-spacing: .12em; color: var(--text-m); display: block; margin-bottom: .22rem; }
+
+input[type=text], input[type=number], select {
+  width: 100%; background: var(--panel); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--f-body); font-size: .85rem;
+  padding: .38rem .55rem; border-radius: var(--r); outline: none;
+  transition: border-color var(--t), box-shadow var(--t); -webkit-appearance: none;
+}
+input:focus, select:focus { border-color: var(--gold-dm); box-shadow: 0 0 0 2px var(--gold-glow); }
+input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a4025'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right .6rem center; padding-right: 1.8rem; cursor: pointer;
+}
+select option { background: #1a1409; color: var(--text); }
+.lvl-row { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+
+.comp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .3rem; }
+.comp-btn {
+  display: flex; align-items: center; justify-content: center; padding: .3rem .2rem;
+  border: 1px solid var(--border); border-radius: var(--r);
+  font-family: var(--f-mono); font-size: .72rem; color: var(--text-m);
+  cursor: pointer; user-select: none; transition: all var(--t); background: transparent;
+}
+.comp-btn:hover { border-color: var(--gold-dm); color: var(--gold); }
+.comp-btn.on { border-color: var(--gold); background: var(--gold-glow); color: var(--gold-lt); }
+
+.btn-clear {
+  font-family: var(--f-head); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+  padding: .4rem .8rem; border: 1px solid var(--border); color: var(--text-m);
+  background: transparent; border-radius: var(--r); cursor: pointer; width: 100%; transition: all var(--t);
+}
+.btn-clear:hover { border-color: var(--red); color: var(--red); }
+
+/* ══ Main ══ */
+#main { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+
+#ctrl-bar { display: flex; align-items: center; gap: .75rem; padding: .55rem .9rem; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#result-count { font-family: var(--f-mono); font-size: .72rem; color: var(--text-m); flex: 1; }
+#result-count strong { color: var(--gold); }
+.pp-group { display: flex; align-items: center; gap: .35rem; font-family: var(--f-mono); font-size: .68rem; color: var(--text-m); }
+.pp-group select { width: auto; padding: .22rem 1.5rem .22rem .4rem; font-size: .68rem; }
+
+#chips { display: none; flex-wrap: wrap; gap: .35rem; padding: .45rem .9rem; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+#chips.show { display: flex; }
+.chip { display: inline-flex; align-items: center; gap: .3rem; padding: .14rem .5rem; background: var(--gold-glow); border: 1px solid var(--gold-dm); border-radius: 2px; font-family: var(--f-mono); font-size: .67rem; color: var(--gold); cursor: pointer; transition: all var(--t); }
+.chip:hover { background: rgba(154,40,40,.2); border-color: var(--red); color: #e07070; }
+.chip-x { opacity: .6; font-size: .6rem; }
+
+/* Tabella */
+#tbl-wrap { flex: 1; overflow: auto; position: relative; }
+table { width: 100%; border-collapse: collapse; }
+thead { position: sticky; top: 0; z-index: 5; }
+thead tr { background: var(--surface); border-bottom: 2px solid var(--border-g); }
+th { font-family: var(--f-head); font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; color: var(--text-m); padding: .55rem .7rem; text-align: left; white-space: nowrap; font-weight: 400; cursor: default; }
+th[data-sort] { cursor: pointer; }
+th[data-sort]:hover { color: var(--gold); }
+th.active-sort { color: var(--gold); }
+.sort-ic { font-size: .55rem; opacity: .5; }
+th.active-sort .sort-ic { opacity: 1; }
+td { padding: .48rem .7rem; border-bottom: 1px solid var(--border); font-size: .85rem; vertical-align: middle; }
+tbody tr { transition: background var(--t); cursor: pointer; }
+tbody tr:hover { background: var(--panel); }
+tbody tr.sel { background: rgba(201,168,76,.07); }
+.badge { display: inline-block; padding: .1rem .5rem; border: 1px solid; border-radius: 2px; font-size: .72rem; font-family: var(--f-mono); white-space: nowrap; }
+.c-name { font-family: var(--f-head); font-size: .84rem; max-width: 220px; }
+.c-rb { color: var(--text-m); font-size: .78rem; font-family: var(--f-mono); max-width: 60px; }
+.c-mono { font-family: var(--f-mono); font-size: .78rem; color: var(--text-m); }
+
+/* Paginazione */
+#pager { display: flex; align-items: center; justify-content: center; gap: .25rem; padding: .55rem .9rem; border-top: 1px solid var(--border); background: var(--surface); flex-shrink: 0; flex-wrap: wrap; }
+.pg-btn { min-width: 28px; height: 28px; padding: 0 .45rem; background: transparent; border: 1px solid var(--border); color: var(--text-m); font-family: var(--f-mono); font-size: .72rem; border-radius: var(--r); cursor: pointer; transition: all var(--t); }
+.pg-btn:hover:not(:disabled) { border-color: var(--gold-dm); color: var(--gold); }
+.pg-btn.cur { border-color: var(--gold); background: var(--gold-glow); color: var(--gold); }
+.pg-btn:disabled { opacity: .25; cursor: not-allowed; }
+#pg-info { font-family: var(--f-mono); font-size: .67rem; color: var(--text-d); margin: 0 auto; }
+.pg-gap { color: var(--text-d); font-family: var(--f-mono); padding: 0 .15rem; font-size: .7rem; }
+
+/* Loading inline */
+#loading { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; flex-direction: column; gap: 1rem; background: rgba(10,7,3,.7); z-index: 8; }
+#loading.show { display: flex; }
+.spinner { width: 36px; height: 36px; border: 2px solid var(--border-g); border-top-color: var(--gold); border-radius: 50%; animation: spin .9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin-lbl { font-family: var(--f-head); font-size: .62rem; letter-spacing: .22em; color: var(--text-m); }
+
+#empty { display: none; text-align: center; padding: 4rem 2rem; }
+#empty.show { display: block; }
+#empty .e-title { font-family: var(--f-head); font-size: 1.1rem; color: var(--text-d); margin-bottom: .5rem; }
+#empty p { font-size: .85rem; color: var(--text-m); font-style: italic; }
+
+/* ══ Drawer ══ */
+#overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 100; backdrop-filter: blur(3px); }
+#overlay.open { display: block; }
+#drawer { position: fixed; top: 0; right: 0; width: var(--dw); height: 100vh; background: var(--panel); border-left: 1px solid var(--border-g); z-index: 101; display: flex; flex-direction: column; transform: translateX(100%); transition: transform .28s cubic-bezier(.4,0,.2,1); box-shadow: -12px 0 48px rgba(0,0,0,.7); }
+#drawer.open { transform: translateX(0); }
+#drawer::before { content: ''; position: absolute; top: 0; left: -1px; bottom: 0; width: 1px; background: linear-gradient(to bottom, transparent 5%, var(--gold) 30%, var(--gold) 70%, transparent 95%); opacity: .35; }
+.d-header { display: flex; align-items: flex-start; padding: 1.1rem 1.2rem .9rem; border-bottom: 1px solid var(--border); flex-shrink: 0; gap: .75rem; }
+.d-header-l { flex: 1; min-width: 0; }
+.d-name { font-family: var(--f-head); font-size: 1.15rem; font-weight: 700; color: var(--gold-lt); line-height: 1.25; margin-bottom: .28rem; }
+.d-book { font-family: var(--f-body); font-style: italic; font-size: .78rem; color: var(--text-m); }
+.d-close { background: transparent; border: 1px solid var(--border); color: var(--text-m); width: 26px; height: 26px; border-radius: var(--r); cursor: pointer; font-size: .9rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--t); }
+.d-close:hover { border-color: var(--red); color: var(--red); }
+.d-body { flex: 1; overflow-y: auto; padding: 1rem 1.2rem 1.5rem; }
+.d-school { margin-bottom: .9rem; }
+.stat-grid { display: grid; grid-template-columns: auto 1fr; row-gap: .28rem; column-gap: .7rem; margin-bottom: 1.1rem; font-size: .84rem; }
+.sl { font-family: var(--f-head); font-size: .6rem; letter-spacing: .12em; color: var(--text-m); text-align: right; white-space: nowrap; padding-top: .05rem; }
+.sv { font-family: var(--f-body); color: var(--text); }
+.sv.mono { font-family: var(--f-mono); font-size: .78rem; }
+.cls-chips { display: flex; flex-wrap: wrap; gap: .22rem; }
+.cls-chip { display: inline-flex; align-items: center; gap: .18rem; padding: .08rem .38rem; background: var(--purple-glow); border: 1px solid rgba(107,63,160,.35); border-radius: 2px; font-family: var(--f-mono); font-size: .67rem; color: var(--purple-lt); }
+.cls-chip .lvl { color: var(--gold); font-weight: 700; }
+.orn { display: flex; align-items: center; gap: .5rem; color: var(--border-g); margin: .85rem 0; font-size: .7rem; }
+.orn::before, .orn::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.d-desc-lbl { font-family: var(--f-head); font-size: .6rem; letter-spacing: .2em; color: var(--gold-dm); text-transform: uppercase; margin-bottom: .6rem; padding-bottom: .4rem; border-bottom: 1px solid var(--border); }
+.d-desc { font-family: var(--f-body); font-size: .88rem; line-height: 1.72; color: var(--text); }
+.d-desc p { margin-bottom: .7em; }
+.d-link { margin-top: 1.2rem; padding-top: .7rem; border-top: 1px solid var(--border); }
+.d-link a { color: var(--text-m); font-family: var(--f-mono); font-size: .68rem; text-decoration: none; transition: color var(--t); }
+.d-link a:hover { color: var(--gold); }
+
+/* Colori scuole */
+.sc-Abjuration    { color: #7090d0; background: rgba(40,60,100,.2);  border-color: rgba(70,90,140,.4);  }
+.sc-Conjuration   { color: #70b858; background: rgba(50,90,35,.2);   border-color: rgba(80,120,50,.4);  }
+.sc-Divination    { color: #c8c050; background: rgba(90,85,30,.2);   border-color: rgba(120,110,40,.4); }
+.sc-Enchantment   { color: #c868a8; background: rgba(90,40,70,.2);   border-color: rgba(120,55,90,.4);  }
+.sc-Evocation     { color: #d07050; background: rgba(100,45,25,.2);  border-color: rgba(130,60,35,.4);  }
+.sc-Illusion      { color: #9870d0; background: rgba(65,40,100,.2);  border-color: rgba(90,55,130,.4);  }
+.sc-Necromancy    { color: #9898a0; background: rgba(50,50,55,.2);   border-color: rgba(70,70,75,.4);   }
+.sc-Transmutation { color: #c89040; background: rgba(90,60,20,.2);   border-color: rgba(120,80,30,.4);  }
+.sc-Universal     { color: #c9a84c; background: rgba(90,65,20,.2);   border-color: rgba(120,85,25,.4);  }
+</style>
+</head>
+<body>
+
+<!-- Schermata di avvio -->
+<div id="splash">
+  <div class="splash-logo">✦ Codice Arcano</div>
+  <div class="splash-sub">D&D 3.5 · Database Incantesimi</div>
+  <div class="splash-spin"></div>
+  <div class="splash-msg" id="splash-msg">Caricamento in corso…</div>
+</div>
+
+<!-- App principale -->
+<div id="app" class="hidden">
+
+  <header id="hdr">
+    <div class="hdr-logo">✦ Codice Arcano<em>D&D 3.5 · Database Incantesimi</em></div>
+    <div class="hdr-sep"></div>
+    <div id="hdr-stats">Caricamento…</div>
+  </header>
+
+  <aside id="sidebar">
+
+    <div class="s-block">
+      <div class="s-title">Ricerca</div>
+      <div class="s-body">
+        <div><label class="lbl">Nome Incantesimo</label>
+          <input type="text" id="f-name" placeholder="es. Palla di Fuoco…" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">Classificazione</div>
+      <div class="s-body">
+        <div><label class="lbl">Scuola</label>
+          <select id="f-school"><option value="">— Tutte le Scuole —</option></select>
+        </div>
+        <div><label class="lbl">Manuale</label>
+          <select id="f-rulebook"><option value="">— Tutti i Manuali —</option></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">Classe e Livello</div>
+      <div class="s-body">
+        <div><label class="lbl">Classe</label>
+          <select id="f-class"><option value="">— Tutte le Classi —</option></select>
+        </div>
+        <div><label class="lbl">Livello Incantesimo</label>
+          <div class="lvl-row">
+            <input type="number" id="f-lmin" placeholder="Min" min="0" max="9">
+            <input type="number" id="f-lmax" placeholder="Max" min="0" max="9">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="s-block">
+      <div class="s-title">Componenti</div>
+      <div class="s-body">
+        <div class="comp-grid">
+          <button class="comp-btn" data-c="V">V</button>
+          <button class="comp-btn" data-c="S">S</button>
+          <button class="comp-btn" data-c="M">M</button>
+          <button class="comp-btn" data-c="F">F</button>
+          <button class="comp-btn" data-c="DF">DF</button>
+          <button class="comp-btn" data-c="XP">XP</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-clear" id="btn-clear">✕ &nbsp;Azzera Filtri</button>
+  </aside>
+
+  <main id="main">
+    <div id="ctrl-bar">
+      <span id="result-count">—</span>
+      <div class="pp-group">
+        Mostra
+        <select id="f-pp">
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+        </select>
+        per pagina
+      </div>
+    </div>
+
+    <div id="chips"></div>
+
+    <div id="tbl-wrap">
+      <div id="loading"><div class="spinner"></div><span class="spin-lbl">Consultando il Codice…</span></div>
+      <div id="empty"><div class="e-title">Nessun Incantesimo Trovato</div><p>Modifica i filtri per trovare ciò che cerchi, viaggiatore.</p></div>
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th data-sort="name">Nome <span class="sort-ic">↕</span></th>
+            <th data-sort="school">Scuola <span class="sort-ic">↕</span></th>
+            <th data-sort="rulebook_full">Manuale <span class="sort-ic">↕</span></th>
+            <th>Livello</th>
+            <th>Componenti</th>
+            <th data-sort="casting_time">Tempo di Lancio <span class="sort-ic">↕</span></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+
+    <div id="pager">
+      <button class="pg-btn" id="btn-prev">‹</button>
+      <div id="pg-btns"></div>
+      <button class="pg-btn" id="btn-next">›</button>
+      <span id="pg-info"></span>
+    </div>
+  </main>
+</div>
+
+<!-- Drawer dettaglio -->
+<div id="overlay"></div>
+<div id="drawer">
+  <div class="d-header">
+    <div class="d-header-l">
+      <div class="d-name" id="d-name"></div>
+      <div class="d-book" id="d-book"></div>
+    </div>
+    <button class="d-close" id="d-close">✕</button>
+  </div>
+  <div class="d-body" id="d-body"></div>
+</div>
+
+<script>
+'use strict';
+
+/* ══ sql.js ══ */
+let SQL = null, db = null;
+
+/* ── Query helpers ── */
+function dbQuery(sql, params = []) {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  const rows = [];
+  while (stmt.step()) rows.push(stmt.getAsObject());
+  stmt.free();
+  return rows;
+}
+function dbScalar(sql, params = []) {
+  const stmt = db.prepare(sql);
+  stmt.bind(params);
+  const val = stmt.step() ? stmt.get()[0] : 0;
+  stmt.free();
+  return val;
+}
+
+/* ══ Avvio ══ */
+async function init() {
+  const msg = document.getElementById('splash-msg');
+
+  msg.textContent = 'Caricamento motore SQL…';
+  SQL = await initSqlJs({
+    locateFile: file => `https://cdn.jsdelivr.net/npm/sql.js@1.11.0/dist/${file}`
+  });
+
+  msg.textContent = 'Apertura database…';
+  // Decodifica base64 → Uint8Array → SQL.Database
+  const binary = atob(window.DB_DATA);
+  const bytes  = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  db = new SQL.Database(bytes);
+
+  msg.textContent = 'Inizializzazione…';
+  await loadMeta();
+
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+
+  fetchSpells();
+}
+
+/* ══ Colori scuole ══ */
+const SC = {
+  Abjuration:'sc-Abjuration', Conjuration:'sc-Conjuration',
+  Divination:'sc-Divination', Enchantment:'sc-Enchantment',
+  Evocation:'sc-Evocation',   Illusion:'sc-Illusion',
+  Necromancy:'sc-Necromancy', Transmutation:'sc-Transmutation',
+  Universal:'sc-Universal'
+};
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function badge(school) {
+  if (!school) return '<span style="color:var(--text-d)">—</span>';
+  return `<span class="badge ${SC[school]||''}">${esc(school)}</span>`;
+}
+
+/* ══ State ══ */
+const state = {
+  page:1, perPage:25, sort:'name', order:'asc',
+  total:0, pages:1, selectedId:null, timer:null,
+  f:{ name:'', school:'', class_name:'', level_min:'', level_max:'', rulebook:'', comps:[] }
+};
+
+/* ══ Query builder ══ */
+const SORT_COLS = { name:'s.name', school:'s.school', rulebook_full:'s.rulebook_full', casting_time:'s.casting_time' };
+
+function buildWhere() {
+  const {f} = state;
+  const conds = [], params = [];
+  let useClassJoin   = false;
+  let useRulebookJoin = false;
+
+  if (f.name)   { conds.push("s.name LIKE ?");  params.push(`%${f.name}%`); }
+  if (f.school) { conds.push("s.school = ?");    params.push(f.school); }
+  for (const c of f.comps) { conds.push("s.components LIKE ?"); params.push(`%${c}%`); }
+
+  if (f.class_name || f.level_min !== '' || f.level_max !== '') {
+    useClassJoin = true;
+    if (f.class_name)       { conds.push("sc.class_name = ?"); params.push(f.class_name); }
+    if (f.level_min !== '') { conds.push("sc.level >= ?");     params.push(+f.level_min); }
+    if (f.level_max !== '') { conds.push("sc.level <= ?");     params.push(+f.level_max); }
+  }
+
+  if (f.rulebook) {
+    useRulebookJoin = true;
+    conds.push("sr.rulebook_full = ?");
+    params.push(f.rulebook);
+  }
+
+  const joins = [
+    useClassJoin    ? "JOIN spell_classes sc ON sc.spell_id = s.id"    : "",
+    useRulebookJoin ? "JOIN spell_rulebooks sr ON sr.spell_id = s.id"  : "",
+  ].filter(Boolean).join(" ");
+
+  const useJoin = useClassJoin || useRulebookJoin;
+  const where = conds.length ? "WHERE " + conds.join(" AND ") : "";
+  const dist  = useJoin ? "DISTINCT" : "";
+  return { join: joins, where, params, dist };
+}
+
+/* ══ Fetch spells ══ */
+function fetchSpells() {
+  if (!db) return;
+  document.getElementById('loading').classList.add('show');
+  document.getElementById('empty').classList.remove('show');
+
+  setTimeout(() => {
+    try {
+      const { join, where, params, dist } = buildWhere();
+      const sortCol  = SORT_COLS[state.sort] || 's.name';
+      const orderSql = state.order === 'desc' ? 'DESC' : 'ASC';
+      const offset   = (state.page - 1) * state.perPage;
+
+      const countSql = dist
+        ? `SELECT COUNT(*) FROM (SELECT DISTINCT s.id FROM spells s ${join} ${where})`
+        : `SELECT COUNT(*) FROM spells s ${join} ${where}`;
+      state.total = dbScalar(countSql, params);
+      state.pages = Math.max(1, Math.ceil(state.total / state.perPage));
+
+      const rows = dbQuery(`
+        SELECT ${dist} s.id, s.name, s.school,
+               s.rulebook, s.rulebooks, s.rulebooks_full,
+               s.level, s.components, s.casting_time, s.saving_throw
+        FROM spells s ${join} ${where}
+        ORDER BY ${sortCol} COLLATE NOCASE ${orderSql}
+        LIMIT ? OFFSET ?`, [...params, state.perPage, offset]);
+
+      renderTable(rows);
+      renderControls();
+      renderChips();
+    } finally {
+      document.getElementById('loading').classList.remove('show');
+    }
+  }, 10);
+}
+
+function debounce(fn, delay = 300) { clearTimeout(state.timer); state.timer = setTimeout(fn, delay); }
+function setFilter(key, val, immediate = false) { state.f[key] = val; state.page = 1; immediate ? fetchSpells() : debounce(fetchSpells); }
+
+/* ══ Render: Tabella ══ */
+function renderTable(rows) {
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  if (!rows.length) { tbody.innerHTML = ''; empty.classList.add('show'); return; }
+  empty.classList.remove('show');
+
+  tbody.innerHTML = rows.map(s => {
+    const lvl = s.level ? s.level.split(',').slice(0,3).map(p=>p.trim()).filter(Boolean).join(', ') : '—';
+    return `<tr data-id="${s.id}"${s.id===state.selectedId?' class="sel"':''}>
+      <td class="c-name" title="${esc(s.name)}">${esc(s.name)}</td>
+      <td>${badge(s.school)}</td>
+      <td class="c-rb" title="${esc(s.rulebooks_full||s.rulebook||'')}">${esc(s.rulebooks||s.rulebook||'—')}</td>
+      <td class="c-mono">${esc(lvl)}</td>
+      <td class="c-mono">${esc(s.components||'—')}</td>
+      <td class="c-mono">${esc(s.casting_time||'—')}</td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr').forEach(tr =>
+    tr.addEventListener('click', () => openDrawer(+tr.dataset.id))
+  );
+  document.querySelectorAll('thead th[data-sort]').forEach(th => {
+    const active = th.dataset.sort === state.sort;
+    th.classList.toggle('active-sort', active);
+    th.querySelector('.sort-ic').textContent = active ? (state.order==='asc'?'↑':'↓') : '↕';
+  });
+}
+
+/* ══ Render: Controlli ══ */
+function renderControls() {
+  const from = state.total ? (state.page-1)*state.perPage+1 : 0;
+  const to   = Math.min(state.page*state.perPage, state.total);
+  document.getElementById('result-count').innerHTML = state.total
+    ? `Visualizzati <strong>${from}–${to}</strong> di <strong>${state.total}</strong> incantesimi`
+    : '<strong>0</strong> incantesimi trovati';
+
+  document.getElementById('btn-prev').disabled = state.page <= 1;
+  document.getElementById('btn-next').disabled = state.page >= state.pages;
+  document.getElementById('pg-info').textContent = `Pagina ${state.page} / ${state.pages}`;
+
+  const container = document.getElementById('pg-btns');
+  container.innerHTML = pageNums().map(p =>
+    p === '…' ? `<span class="pg-gap">…</span>`
+               : `<button class="pg-btn${p===state.page?' cur':''}" data-p="${p}">${p}</button>`
+  ).join('');
+  container.querySelectorAll('[data-p]').forEach(b =>
+    b.addEventListener('click', () => { state.page=+b.dataset.p; fetchSpells(); })
+  );
+}
+
+function pageNums() {
+  const {page:p, pages:n} = state;
+  if (n <= 7) return Array.from({length:n},(_,i)=>i+1);
+  const s = new Set([1,2,p-1,p,p+1,n-1,n]);
+  const arr = []; let prev = 0;
+  for (const x of [...s].filter(x=>x>=1&&x<=n).sort((a,b)=>a-b)) {
+    if (prev && x-prev>1) arr.push('…');
+    arr.push(x); prev=x;
+  }
+  return arr;
+}
+
+/* ══ Render: Chip filtri ══ */
+function renderChips() {
+  const bar = document.getElementById('chips');
+  const {f} = state;
+  const chips = [];
+  if (f.name)         chips.push({t:`Nome: ${f.name}`,        k:'name'});
+  if (f.school)       chips.push({t:`Scuola: ${f.school}`,    k:'school'});
+  if (f.class_name)   chips.push({t:`Classe: ${f.class_name}`,k:'class_name'});
+  if (f.level_min!=='') chips.push({t:`Livello ≥ ${f.level_min}`, k:'level_min'});
+  if (f.level_max!=='') chips.push({t:`Livello ≤ ${f.level_max}`, k:'level_max'});
+  if (f.rulebook) chips.push({t: f.rulebook.length>24 ? f.rulebook.slice(0,22)+'…' : f.rulebook, k:'rulebook'});
+  f.comps.forEach(c => chips.push({t:`Comp: ${c}`, k:'comp:'+c}));
+
+  if (!chips.length) { bar.innerHTML=''; bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  bar.innerHTML = chips.map(c =>
+    `<span class="chip" data-k="${c.k}">${esc(c.t)} <span class="chip-x">×</span></span>`
+  ).join('');
+  bar.querySelectorAll('.chip').forEach(ch =>
+    ch.addEventListener('click', () => removeFilter(ch.dataset.k))
+  );
+}
+
+function removeFilter(k) {
+  if (k.startsWith('comp:')) {
+    const c = k.slice(5);
+    state.f.comps = state.f.comps.filter(x=>x!==c);
+    document.querySelectorAll(`.comp-btn[data-c="${c}"]`).forEach(b=>b.classList.remove('on'));
+  } else {
+    state.f[k] = '';
+    const ids = {name:'f-name',school:'f-school',class_name:'f-class',level_min:'f-lmin',level_max:'f-lmax',rulebook:'f-rulebook'};
+    const el = document.getElementById(ids[k]); if (el) el.value='';
+  }
+  state.page=1; fetchSpells();
+}
+
+/* ══ Drawer ══ */
+function openDrawer(id) {
+  state.selectedId = id;
+  document.querySelectorAll('tbody tr').forEach(tr => tr.classList.toggle('sel', +tr.dataset.id===id));
+  document.getElementById('overlay').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('d-name').textContent = 'Caricamento…';
+  document.getElementById('d-book').textContent = '';
+  document.getElementById('d-body').innerHTML =
+    '<div style="padding:2.5rem;text-align:center"><div class="spinner" style="margin:0 auto"></div></div>';
+
+  setTimeout(() => {
+    const spell = dbQuery("SELECT * FROM spells WHERE id = ?", [id])[0];
+    if (!spell) return;
+    spell.class_levels = dbQuery(
+      "SELECT class_name, level FROM spell_classes WHERE spell_id = ? ORDER BY class_name", [id]
+    );
+    renderDrawer(spell);
+  }, 5);
+}
+
+function renderDrawer(s) {
+  document.getElementById('d-name').textContent = s.name||'';
+  // Mostra solo la prima sigla nel sottotitolo del drawer
+  const firstBook = (s.rulebooks_full||s.rulebook_full||s.rulebook||'').split(' | ')[0];
+  document.getElementById('d-book').textContent = firstBook;
+
+  const schoolBadge = s.school
+    ? `<span class="badge ${SC[s.school]||''}" style="font-size:.72rem;padding:.12rem .55rem">${esc(s.school)}</span>`
+    : '';
+
+  const chips = (s.class_levels||[]).map(cl =>
+    `<span class="cls-chip">${esc(cl.class_name)} <span class="lvl">${cl.level}</span></span>`
+  ).join('');
+
+  // Badge manuali
+  const books = (s.rulebooks_full||s.rulebook_full||s.rulebook||'').split(' | ').filter(Boolean);
+  const booksHtml = books.length
+    ? `<div class="cls-chips">${books.map(b=>`<span class="cls-chip" style="color:var(--gold);border-color:rgba(201,168,76,.3)">${esc(b)}</span>`).join('')}</div>`
+    : '—';
+
+  const rows = [
+    ['Manuali',          booksHtml],
+    ['Livello',          chips ? `<div class="cls-chips">${chips}</div>` : esc(s.level||'—')],
+    ['Componenti',       `<span class="mono">${esc(s.components||'—')}</span>`],
+    ['Tempo di Lancio',  `<span class="mono">${esc(s.casting_time||'—')}</span>`],
+    ['Gittata',          esc(s.range||'—')],
+    s.target ? ['Bersaglio', esc(s.target)] : null,
+    s.effect  ? ['Effetto',   esc(s.effect)]  : null,
+    s.area    ? ['Area',      esc(s.area)]    : null,
+    ['Durata',           esc(s.duration||'—')],
+    ['Tiro Salvezza',    `<span class="mono">${esc(s.saving_throw||'—')}</span>`],
+    ['Resistenza Magia', `<span class="mono">${esc(s.spell_resistance||'—')}</span>`],
+  ].filter(Boolean);
+
+  const descHtml = s.description
+    ? s.description.split('\n').filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join('')
+    : '<p style="color:var(--text-m);font-style:italic">Nessuna descrizione disponibile.</p>';
+
+  const linkHtml = s.url
+    ? `<div class="d-link"><a href="${esc(s.url)}" target="_blank" rel="noopener">↗ Vedi su dndtools.net</a></div>`
+    : '';
+
+  document.getElementById('d-body').innerHTML = `
+    <div class="d-school">${schoolBadge}</div>
+    <div class="stat-grid">${rows.map(([l,v])=>`<div class="sl">${l}</div><div class="sv">${v}</div>`).join('')}</div>
+    <div class="orn">✦</div>
+    <div class="d-desc-lbl">Descrizione</div>
+    <div class="d-desc">${descHtml}</div>
+    ${linkHtml}
+  `;
+}
+
+function closeDrawer() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  document.querySelectorAll('tbody tr.sel').forEach(tr=>tr.classList.remove('sel'));
+  state.selectedId = null;
+}
+
+/* ══ Meta ══ */
+async function loadMeta() {
+  const schools   = dbQuery("SELECT DISTINCT school FROM spells WHERE school IS NOT NULL AND school != '' ORDER BY school").map(r=>r.school);
+  const rulebooks = dbQuery("SELECT DISTINCT rulebook_full FROM spell_rulebooks WHERE rulebook_full IS NOT NULL AND rulebook_full != '' ORDER BY rulebook_full").map(r=>r.rulebook_full);
+  const classes   = dbQuery("SELECT DISTINCT class_name FROM spell_classes ORDER BY class_name").map(r=>r.class_name);
+  const total     = dbScalar("SELECT COUNT(*) FROM spells");
+
+  const fill = (id, items) => {
+    const sel = document.getElementById(id);
+    items.forEach(v => { const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  };
+  fill('f-school',   schools);
+  fill('f-rulebook', rulebooks);
+  fill('f-class',    classes);
+
+  document.getElementById('hdr-stats').innerHTML =
+    `<strong>${total}</strong> incantesimi &nbsp;·&nbsp; `+
+    `<strong>${schools.length}</strong> scuole &nbsp;·&nbsp; `+
+    `<strong>${rulebooks.length}</strong> manuali &nbsp;·&nbsp; `+
+    `<strong>${classes.length}</strong> classi`;
+}
+
+/* ══ Event bindings ══ */
+function bindEvents() {
+  document.getElementById('f-name').addEventListener('input',   e => setFilter('name',       e.target.value));
+  document.getElementById('f-school').addEventListener('change',  e => setFilter('school',     e.target.value, true));
+  document.getElementById('f-rulebook').addEventListener('change', e => setFilter('rulebook',   e.target.value, true));
+  document.getElementById('f-class').addEventListener('change',   e => setFilter('class_name', e.target.value, true));
+  document.getElementById('f-lmin').addEventListener('input', e => setFilter('level_min', e.target.value));
+  document.getElementById('f-lmax').addEventListener('input', e => setFilter('level_max', e.target.value));
+
+  document.querySelectorAll('.comp-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const c = btn.dataset.c, idx = state.f.comps.indexOf(c);
+      if (idx>=0) { state.f.comps.splice(idx,1); btn.classList.remove('on'); }
+      else         { state.f.comps.push(c);       btn.classList.add('on'); }
+      state.page=1; fetchSpells();
+    });
+  });
+
+  document.getElementById('f-pp').addEventListener('change', e => { state.perPage=+e.target.value; state.page=1; fetchSpells(); });
+
+  document.querySelectorAll('thead th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (state.sort===col) state.order = state.order==='asc'?'desc':'asc';
+      else { state.sort=col; state.order='asc'; }
+      fetchSpells();
+    });
+  });
+
+  document.getElementById('btn-prev').addEventListener('click', () => { if(state.page>1){state.page--;fetchSpells();} });
+  document.getElementById('btn-next').addEventListener('click', () => { if(state.page<state.pages){state.page++;fetchSpells();} });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    state.f = {name:'',school:'',class_name:'',level_min:'',level_max:'',rulebook:'',comps:[]};
+    ['f-name','f-school','f-rulebook','f-class','f-lmin','f-lmax'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+    document.querySelectorAll('.comp-btn').forEach(b=>b.classList.remove('on'));
+    state.page=1; fetchSpells();
+  });
+
+  document.getElementById('overlay').addEventListener('click', closeDrawer);
+  document.getElementById('d-close').addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
+}
+
+/* ══ Init ══ */
+document.addEventListener('DOMContentLoaded', () => { bindEvents(); init(); });
+</script>
+</body>
+</html>
