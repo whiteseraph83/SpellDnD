@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
 <title>Codice Arcano — D&D 3.5 Database Incantesimi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -84,7 +84,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 /* ══ Header ══ */
 #hdr {
   grid-column: 1/-1;
-  display: flex; align-items: center; justify-content: center; padding: 0 1.4rem; gap: 1.2rem;
+  display: flex; align-items: center; justify-content: flex-start; padding: 0 1.4rem; gap: 1.2rem;
   background: var(--surface); border-bottom: 1px solid var(--border-g);
   position: relative; z-index: 20; flex-shrink: 0;
 }
@@ -270,13 +270,13 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
 }
 #overlay-sidebar.show { display: block; }
 #btn-close-sidebar {
-  display: none; width: 100%; padding: .5rem .7rem;
-  background: transparent; border: none; border-bottom: 1px solid var(--border);
-  color: var(--text-m); font-family: var(--f-head); font-size: .6rem;
-  letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
-  text-align: left; transition: color var(--t);
+  display: none; width: 100%; padding: .8rem 1rem;
+  background: rgba(201,168,76,.12); border: none; border-bottom: 2px solid var(--gold-dm);
+  color: var(--gold-lt); font-family: var(--f-head); font-size: .8rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; cursor: pointer;
+  text-align: center; transition: background var(--t), color var(--t);
 }
-#btn-close-sidebar:hover { color: var(--red); }
+#btn-close-sidebar:hover { background: rgba(201,168,76,.22); color: var(--gold); }
 
 /* ══ View toggle mobile ══ */
 #view-toggle { display: none; gap: .2rem; }
