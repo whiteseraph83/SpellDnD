@@ -84,7 +84,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 /* ══ Header ══ */
 #hdr {
   grid-column: 1/-1;
-  display: flex; align-items: center; padding: 0 1.4rem; gap: 1.2rem;
+  display: flex; align-items: center; justify-content: center; padding: 0 1.4rem; gap: 1.2rem;
   background: var(--surface); border-bottom: 1px solid var(--border-g);
   position: relative; z-index: 20; flex-shrink: 0;
 }
@@ -95,8 +95,8 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .hdr-logo { font-family: var(--f-display); font-size: 1rem; color: var(--gold); letter-spacing: .06em; text-shadow: 0 0 24px rgba(201,168,76,.45); white-space: nowrap; flex-shrink: 0; }
 .hdr-logo em { font-family: var(--f-body); font-style: italic; font-size: .7rem; color: var(--text-m); display: block; letter-spacing: .18em; }
-.hdr-sep { width: 1px; height: 28px; background: var(--border-g); flex-shrink: 0; }
-#hdr-stats { font-family: var(--f-mono); font-size: .72rem; color: var(--text-m); flex: 1; }
+.hdr-sep { display: none; }
+#hdr-stats { font-family: var(--f-mono); font-size: .72rem; color: var(--text-m); position: absolute; right: 1.4rem; }
 #hdr-stats strong { color: var(--gold); }
 
 /* ══ Sidebar ══ */
@@ -239,6 +239,126 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
 .sc-Necromancy    { color: #9898a0; background: rgba(50,50,55,.2);   border-color: rgba(70,70,75,.4);   }
 .sc-Transmutation { color: #c89040; background: rgba(90,60,20,.2);   border-color: rgba(120,80,30,.4);  }
 .sc-Universal     { color: #c9a84c; background: rgba(90,65,20,.2);   border-color: rgba(120,85,25,.4);  }
+
+/* ══ Utility mobile ══ */
+.mob-only { display: none !important; }
+
+/* ══ Mobile: search + gear ══ */
+.mob-search {
+  display: none; flex: 1; background: var(--panel);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: var(--f-body); font-size: .88rem;
+  padding: .35rem .6rem; border-radius: var(--r); outline: none;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+.mob-search:focus { border-color: var(--gold-dm); box-shadow: 0 0 0 2px var(--gold-glow); }
+.mob-search::placeholder { color: var(--text-d); }
+.mob-gear {
+  display: none; align-items: center; justify-content: center;
+  width: 34px; height: 34px; background: transparent;
+  border: 1px solid var(--border-g); border-radius: var(--r);
+  color: var(--text-m); font-size: 1.1rem; cursor: pointer;
+  transition: all var(--t); flex-shrink: 0;
+}
+.mob-gear:hover { border-color: var(--gold-dm); color: var(--gold); }
+.mob-gear.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+
+/* ══ Sidebar overlay (mobile) ══ */
+#overlay-sidebar {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.65); z-index: 199;
+}
+#overlay-sidebar.show { display: block; }
+#btn-close-sidebar {
+  display: none; width: 100%; padding: .5rem .7rem;
+  background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text-m); font-family: var(--f-head); font-size: .6rem;
+  letter-spacing: .14em; text-transform: uppercase; cursor: pointer;
+  text-align: left; transition: color var(--t);
+}
+#btn-close-sidebar:hover { color: var(--red); }
+
+/* ══ View toggle mobile ══ */
+#view-toggle { display: none; gap: .2rem; }
+.view-btn {
+  width: 28px; height: 28px; background: transparent;
+  border: 1px solid var(--border); border-radius: var(--r);
+  color: var(--text-m); font-size: .85rem; cursor: pointer;
+  transition: all var(--t); display: flex; align-items: center; justify-content: center;
+}
+.view-btn:hover { border-color: var(--gold-dm); color: var(--gold); }
+.view-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+
+/* ══ Cards (mobile) ══ */
+#cards { display: none; flex: 1; overflow-y: auto; padding: .6rem .75rem; }
+.spell-card {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: .7rem .9rem; cursor: pointer;
+  transition: border-color var(--t), background var(--t);
+  margin-bottom: 6px;
+}
+.spell-card:active, .spell-card.sel { border-color: var(--gold-dm); background: rgba(201,168,76,.05); }
+.card-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; margin-bottom: .25rem; }
+.card-title { font-family: var(--f-head); color: var(--gold-lt); font-size: .9rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-meta  { font-size: .78rem; color: var(--text-m); font-family: var(--f-mono); }
+.card-grid {
+  display: none; grid-template-columns: auto 1fr;
+  gap: .2rem .65rem; margin-top: .55rem;
+  border-top: 1px solid var(--border); padding-top: .5rem;
+}
+.spell-card.expanded .card-grid { display: grid; }
+.cg-l { font-family: var(--f-head); font-size: .55rem; letter-spacing: .1em; color: var(--text-m); text-align: right; white-space: nowrap; padding-top: .06rem; }
+.cg-v { font-family: var(--f-mono); font-size: .74rem; color: var(--text); }
+
+/* ══ Responsive ══ */
+@media (max-width: 768px) {
+  html, body { overflow: hidden; }
+
+  #app { grid-template-columns: 1fr; grid-template-rows: var(--hh) 1fr; }
+
+  /* header mobile */
+  #hdr { padding: 0 .75rem; gap: .6rem; }
+  .hdr-logo, .hdr-sep { display: none !important; }
+  #hdr-stats { display: none !important; }
+  .mob-search { display: block; }
+  .mob-gear   { display: flex; }
+
+  /* sidebar come pannello slide-in */
+  #sidebar {
+    position: fixed; top: 0; left: 0;
+    width: min(82vw, 300px); height: 100vh;
+    z-index: 200; overflow-y: auto;
+    transform: translateX(-110%);
+    transition: transform .25s ease;
+    border-right: 1px solid var(--border-g);
+  }
+  #sidebar.open { transform: translateX(0); }
+  #btn-close-sidebar { display: block; }
+  #overlay-sidebar.show { display: block; }
+
+  /* main: rimuovi sidebar dallo spazio */
+  #main { grid-column: 1; }
+
+  /* nascondi tabella, mostra cards */
+  #tbl-wrap { display: none !important; }
+  #cards    { display: flex; flex-direction: column; }
+
+  /* ctrl-bar compatta */
+  #ctrl-bar { padding: .4rem .75rem; gap: .5rem; flex-wrap: wrap; }
+  #result-count { font-size: .67rem; }
+  .pp-group { font-size: .63rem; }
+  #view-toggle { display: flex; }
+
+  /* pager compatto */
+  #pager { padding: .4rem .5rem; gap: .18rem; }
+  #pg-info { display: none; }
+
+  /* drawer full-width su mobile */
+  #drawer { width: 100vw; }
+
+  /* mostra solo elementi mob */
+  .mob-only { display: block !important; }
+}
 </style>
 </head>
 <body>
@@ -257,10 +377,14 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
   <header id="hdr">
     <div class="hdr-logo">✦ Codice Arcano<em>D&D 3.5 · Database Incantesimi</em></div>
     <div class="hdr-sep"></div>
+    <input type="text" id="f-name-mob" class="mob-search" placeholder="Cerca incantesimo…" autocomplete="off" spellcheck="false">
+    <button id="btn-filters" class="mob-gear" aria-label="Filtri">⚙</button>
     <div id="hdr-stats">Caricamento…</div>
   </header>
 
+  <div id="overlay-sidebar"></div>
   <aside id="sidebar">
+    <button id="btn-close-sidebar">✕ &nbsp;Chiudi Filtri</button>
 
     <div class="s-block">
       <div class="s-title">Ricerca</div>
@@ -318,6 +442,10 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
   <main id="main">
     <div id="ctrl-bar">
       <span id="result-count">—</span>
+      <div id="view-toggle">
+        <button id="btn-view-mini" class="view-btn active" title="Card compatta">☰</button>
+        <button id="btn-view-full" class="view-btn" title="Card espansa">⊞</button>
+      </div>
       <div class="pp-group">
         Mostra
         <select id="f-pp">
@@ -350,6 +478,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <div id="cards"></div>
 
     <div id="pager">
       <button class="pg-btn" id="btn-prev">‹</button>
@@ -437,10 +566,27 @@ function badge(school) {
   return `<span class="badge ${SC[school]||''}">${esc(school)}</span>`;
 }
 
+/* ══ Mobile helpers ══ */
+function isMobile() { return window.matchMedia('(max-width:768px)').matches; }
+
+const CLASS_PRIORITY = ['Wizard','Sorcerer','Cleric','Druid','Paladin','Ranger','Warlock','Bard'];
+const CLASS_IT = { Wizard:'Mago', Sorcerer:'Stregone', Cleric:'Chierico', Druid:'Druido', Paladin:'Paladino', Ranger:'Ranger', Warlock:'Warlock', Bard:'Bardo' };
+
+function getPriorityClass(levelStr) {
+  if (!levelStr) return null;
+  for (const cls of CLASS_PRIORITY) {
+    const m = levelStr.match(new RegExp(cls + '\\s+(\\d)', 'i'));
+    if (m) return { name: CLASS_IT[cls] || cls, level: +m[1] };
+  }
+  const first = levelStr.split(',')[0].trim();
+  const m2 = first.match(/^(.+?)\s+(\d+)$/);
+  return m2 ? { name: m2[1], level: +m2[2] } : null;
+}
+
 /* ══ State ══ */
 const state = {
   page:1, perPage:25, sort:'name', order:'asc',
-  total:0, pages:1, selectedId:null, timer:null,
+  total:0, pages:1, selectedId:null, timer:null, cardView:'mini',
   f:{ name:'', school:'', class_name:'', level_min:'', level_max:'', rulebook:'', comps:[] }
 };
 
@@ -508,7 +654,11 @@ function fetchSpells() {
         ORDER BY ${sortCol} COLLATE NOCASE ${orderSql}
         LIMIT ? OFFSET ?`, [...params, state.perPage, offset]);
 
-      renderTable(rows);
+      if (isMobile()) {
+        renderCards(rows);
+      } else {
+        renderTable(rows);
+      }
       renderControls();
       renderChips();
     } finally {
@@ -519,6 +669,36 @@ function fetchSpells() {
 
 function debounce(fn, delay = 300) { clearTimeout(state.timer); state.timer = setTimeout(fn, delay); }
 function setFilter(key, val, immediate = false) { state.f[key] = val; state.page = 1; immediate ? fetchSpells() : debounce(fetchSpells); }
+
+/* ══ Render: Card mobile ══ */
+function renderCards(rows) {
+  const container = document.getElementById('cards');
+  if (!rows.length) { container.innerHTML = ''; return; }
+  const isExpanded = state.cardView === 'expanded';
+  container.innerHTML = rows.map(s => {
+    const pc = getPriorityClass(s.level);
+    const classStr = pc ? `${esc(pc.name)} · Liv. ${pc.level}` : esc(s.level||'—');
+    const expandedGrid = isExpanded ? `
+      <div class="card-grid">
+        <span class="cg-l">Scuola</span><span class="cg-v">${esc(s.school||'—')}</span>
+        <span class="cg-l">Componenti</span><span class="cg-v">${esc(s.components||'—')}</span>
+        <span class="cg-l">Tempo Lancio</span><span class="cg-v">${esc(s.casting_time||'—')}</span>
+        <span class="cg-l">Tiro Salvezza</span><span class="cg-v">${esc(s.saving_throw||'—')}</span>
+        <span class="cg-l">Manuale</span><span class="cg-v">${esc(s.rulebooks||s.rulebook||'—')}</span>
+      </div>` : '';
+    return `<div class="spell-card${isExpanded?' expanded':''}${s.id===state.selectedId?' sel':''}" data-id="${s.id}">
+      <div class="card-top">
+        <span class="card-title">${esc(s.name)}</span>
+        ${badge(s.school)}
+      </div>
+      <div class="card-meta">${classStr}</div>
+      ${expandedGrid}
+    </div>`;
+  }).join('');
+  container.querySelectorAll('.spell-card').forEach(card =>
+    card.addEventListener('click', () => openDrawer(+card.dataset.id))
+  );
+}
 
 /* ══ Render: Tabella ══ */
 function renderTable(rows) {
@@ -762,7 +942,52 @@ function bindEvents() {
 
   document.getElementById('overlay').addEventListener('click', closeDrawer);
   document.getElementById('d-close').addEventListener('click', closeDrawer);
-  document.addEventListener('keydown', e => { if(e.key==='Escape') closeDrawer(); });
+  document.addEventListener('keydown', e => { if(e.key==='Escape') { closeDrawer(); closeSidebar(); } });
+
+  /* ── Sidebar mobile ── */
+  function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay-sidebar').classList.add('show');
+    document.getElementById('btn-filters').classList.add('active');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay-sidebar').classList.remove('show');
+    document.getElementById('btn-filters').classList.remove('active');
+  }
+  document.getElementById('btn-filters').addEventListener('click', openSidebar);
+  document.getElementById('overlay-sidebar').addEventListener('click', closeSidebar);
+  document.getElementById('btn-close-sidebar').addEventListener('click', closeSidebar);
+
+  /* ── Search mobile ↔ sidebar sync ── */
+  document.getElementById('f-name-mob').addEventListener('input', e => {
+    document.getElementById('f-name').value = e.target.value;
+    setFilter('name', e.target.value);
+  });
+  document.getElementById('f-name').addEventListener('input', e => {
+    document.getElementById('f-name-mob').value = e.target.value;
+  });
+
+  /* ── View toggle mobile ── */
+  document.getElementById('btn-view-mini').addEventListener('click', () => {
+    state.cardView = 'mini';
+    document.getElementById('btn-view-mini').classList.add('active');
+    document.getElementById('btn-view-full').classList.remove('active');
+    fetchSpells();
+  });
+  document.getElementById('btn-view-full').addEventListener('click', () => {
+    state.cardView = 'expanded';
+    document.getElementById('btn-view-full').classList.add('active');
+    document.getElementById('btn-view-mini').classList.remove('active');
+    fetchSpells();
+  });
+
+  /* ── Resize: ricalcola vista se cambia breakpoint ── */
+  let _lastMobile = isMobile();
+  window.addEventListener('resize', debounce.bind(null, () => {
+    const m = isMobile();
+    if (m !== _lastMobile) { _lastMobile = m; fetchSpells(); }
+  }, 200));
 }
 
 /* ══ Init ══ */
