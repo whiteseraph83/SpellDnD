@@ -175,9 +175,29 @@ function badge(school, lang = state.lang) {
   return `<span class="badge ${SC[school] || ''}">${esc(tSchool(school, lang))}</span>`;
 }
 
-function formatLevelSummary(level) {
-  if (!level) return '—';
-  return level.split(',').slice(0, 2).map(part => part.trim()).filter(Boolean).join(', ');
+const CLASS_PRIORITY = ['Wizard','Sorcerer','Cleric','Druid','Paladin','Ranger','Warlock','Bard'];
+
+function parseClassLevels(raw) {
+  if (!raw) return [];
+  return raw.split('|').map(entry => {
+    const m = entry.match(/^(.+)\s+(\d+)$/);
+    return m ? { name: m[1].trim(), level: +m[2] } : null;
+  }).filter(Boolean);
+}
+
+function formatClassLevels(raw, lang = state.lang, mobile = false) {
+  const entries = parseClassLevels(raw);
+  if (!entries.length) return '—';
+  let sorted = entries;
+  if (mobile) {
+    sorted = [...entries].sort((a, b) => {
+      const ai = CLASS_PRIORITY.indexOf(a.name), bi = CLASS_PRIORITY.indexOf(b.name);
+      return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+    });
+  }
+  return sorted.slice(0, mobile ? 1 : 3)
+    .map(e => `${tClass(e.name, lang)} ${e.level}`)
+    .join(', ');
 }
 
 function setButtonGroupActive(selector, lang) {
@@ -287,7 +307,11 @@ function fetchSpells() {
       const rows = dbQuery(`
         SELECT ${dist} s.id, s.lang, s.name, s.school,
                s.rulebook, s.rulebooks, s.rulebooks_full,
-               s.level, s.components, s.casting_time, s.saving_throw
+               s.level, s.components, s.casting_time, s.saving_throw,
+               (SELECT GROUP_CONCAT(sc2.class_name || ' ' || sc2.level, '|')
+                FROM spell_classes sc2
+                WHERE sc2.spell_id = s.id
+                ORDER BY sc2.class_name) AS class_levels_raw
         FROM spells s ${join} ${where}
         ORDER BY ${sortCol} COLLATE NOCASE ${orderSql}
         LIMIT ? OFFSET ?
@@ -339,7 +363,7 @@ function renderCards(rows) {
         <span class="card-title">${esc(spell.name)}</span>
         ${badge(spell.school)}
       </div>
-      <div class="card-meta">${esc(formatLevelSummary(spell.level))}</div>
+      <div class="card-meta">${esc(formatClassLevels(spell.class_levels_raw, state.lang, true))}</div>
       ${expandedGrid}
     </div>`;
   }).join('');
@@ -363,7 +387,7 @@ function renderTable(rows) {
       <td class="c-name" title="${esc(spell.name)}">${esc(spell.name)}</td>
       <td>${badge(spell.school)}</td>
       <td class="c-rb" title="${esc(spell.rulebooks_full || spell.rulebook || '')}">${esc(spell.rulebooks || spell.rulebook || '—')}</td>
-      <td class="c-mono">${esc(formatLevelSummary(spell.level))}</td>
+      <td class="c-mono">${esc(formatClassLevels(spell.class_levels_raw))}</td>
       <td class="c-mono">${esc(spell.components || '—')}</td>
       <td class="c-mono">${esc(normalizeTerm(spell.casting_time) || '—')}</td>
     </tr>
