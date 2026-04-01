@@ -545,13 +545,13 @@ function renderDrawer(spell) {
     ? spell.description.split('\n').filter(Boolean).map(paragraph => `<p>${esc(paragraph)}</p>`).join('')
     : `<p style="color:var(--text-m);font-style:italic">${esc(labels.noDescription)}</p>`;
 
-  const footer = document.getElementById('d-footer');
+  const extLink = document.getElementById('d-ext-link');
   if (spell.url) {
-    footer.style.display = '';
-    footer.innerHTML = `<a href="${esc(spell.url)}" target="_blank" rel="noopener">↗ ${esc(labels.sourceLink)}</a>`;
+    extLink.href = spell.url;
+    extLink.classList.add('visible');
   } else {
-    footer.style.display = 'none';
-    footer.innerHTML = '';
+    extLink.removeAttribute('href');
+    extLink.classList.remove('visible');
   }
 
   document.getElementById('d-body').innerHTML = `
