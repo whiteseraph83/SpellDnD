@@ -182,11 +182,14 @@ select option { background: #1a1409; color: var(--text); }
 #btn-favorites.active svg, #d-fav-btn.active svg { fill: currentColor; }
 /* Vista preferiti */
 #favorites-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-#main.favorites-mode #tbl-wrap { display: none !important; }
-#main.favorites-mode #cards    { display: none !important; }
-#main.favorites-mode #pager    { display: none !important; }
-#main.favorites-mode #chips    { display: none !important; }
+#main.favorites-mode #tbl-wrap      { display: none !important; }
+#main.favorites-mode #cards         { display: none !important; }
+#main.favorites-mode #pager         { display: none !important; }
+#main.favorites-mode #chips         { display: none !important; }
 #main.favorites-mode #favorites-view { display: flex; }
+#main.favorites-mode #result-count  { display: none; }
+#main.favorites-mode #view-toggle   { display: none !important; }
+#main.favorites-mode .pp-group      { display: none; }
 #fav-header {
   display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
   padding: .55rem .9rem; background: var(--surface); border-bottom: 1px solid var(--border-g);
@@ -603,7 +606,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
   <div id="d-footer" style="display:none"></div>
 </div>
 
-<script src="app.js?v=1.0.9"></script>
+<script src="app.js?v=1.1.0"></script>
 <script type="application/json" id="legacy-script-disabled">
 'use strict';
 

@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.9';
+const VERSION = '1.1.0';
 
 let SQL = null;
 let db = null;
@@ -717,7 +717,8 @@ function setLanguage(lang) {
   state.drawerLang = lang;
   renderLanguageControls();
   renderMetaOptions();
-  fetchSpells();
+  if (state.view === 'favorites') renderFavorites();
+  else fetchSpells();
   if (document.getElementById('drawer').classList.contains('open') && state.selectedId) {
     loadDrawerSpell();
   }
