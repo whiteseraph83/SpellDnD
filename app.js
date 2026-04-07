@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.1';
+const VERSION = '1.0.2';
 
 let SQL = null;
 let db = null;
@@ -178,6 +178,7 @@ function badge(school, lang = state.lang) {
 }
 
 const CLASS_PRIORITY = ['Wizard','Sorcerer','Cleric','Druid','Paladin','Ranger','Warlock','Bard'];
+const RESULT_CLASSES = new Set(['Wizard','Cleric','Sorcerer','Druid','Bard','Paladin','Ranger']);
 
 function parseClassLevels(raw) {
   if (!raw) return [];
@@ -187,19 +188,18 @@ function parseClassLevels(raw) {
   }).filter(Boolean);
 }
 
-function formatClassLevels(raw, lang = state.lang, mobile = false) {
-  const entries = parseClassLevels(raw);
+function formatClassLevels(raw, lang = state.lang, filterMain = false) {
+  let entries = parseClassLevels(raw);
   if (!entries.length) return '—';
-  let sorted = entries;
-  if (mobile) {
-    sorted = [...entries].sort((a, b) => {
+  if (filterMain) {
+    entries = entries.filter(e => RESULT_CLASSES.has(e.name));
+    entries.sort((a, b) => {
       const ai = CLASS_PRIORITY.indexOf(a.name), bi = CLASS_PRIORITY.indexOf(b.name);
       return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
     });
   }
-  return sorted.slice(0, mobile ? 1 : 3)
-    .map(e => `${tClass(e.name, lang)} ${e.level}`)
-    .join(', ');
+  if (!entries.length) return '—';
+  return entries.map(e => `${tClass(e.name, lang)} ${e.level}`).join(', ');
 }
 
 function setButtonGroupActive(selector, lang) {
@@ -365,7 +365,7 @@ function renderCards(rows) {
         <span class="card-title">${esc(spell.name)}</span>
         ${badge(spell.school)}
       </div>
-      <div class="card-meta">${esc(formatClassLevels(spell.class_levels_raw, state.lang, true))}</div>
+      <div class="card-meta">${esc(formatClassLevels(spell.class_levels_raw, state.lang, true)) || '—'}</div>
       ${expandedGrid}
     </div>`;
   }).join('');
@@ -389,7 +389,7 @@ function renderTable(rows) {
       <td class="c-name" title="${esc(spell.name)}">${esc(spell.name)}</td>
       <td>${badge(spell.school)}</td>
       <td class="c-rb" title="${esc(spell.rulebooks_full || spell.rulebook || '')}">${esc(spell.rulebooks || spell.rulebook || '—')}</td>
-      <td class="c-mono">${esc(formatClassLevels(spell.class_levels_raw))}</td>
+      <td class="c-mono">${esc(formatClassLevels(spell.class_levels_raw, state.lang, true))}</td>
       <td class="c-mono">${esc(spell.components || '—')}</td>
       <td class="c-mono">${esc(normalizeTerm(spell.casting_time) || '—')}</td>
     </tr>
