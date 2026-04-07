@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.6';
+const VERSION = '1.0.7';
 
 let SQL = null;
 let db = null;
@@ -122,14 +122,10 @@ function updateFavBtn(id) {
   const btn = document.getElementById('d-fav-btn');
   if (!btn || !id) return;
   const on = isFavorite(id);
-  btn.textContent = on ? '★' : '☆';
   btn.classList.toggle('active', on);
   btn.title = on ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti';
 }
-function updateFavCount() {
-  const el = document.getElementById('fav-count');
-  if (el) el.textContent = favorites.size;
-}
+function updateFavCount() {}
 function showFavoritesView() {
   state.view = 'favorites';
   document.getElementById('main').classList.add('favorites-mode');
