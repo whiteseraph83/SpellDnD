@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 
 let SQL = null;
 let db = null;
