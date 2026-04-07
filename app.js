@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.8';
+const VERSION = '1.0.9';
 
 let SQL = null;
 let db = null;
@@ -832,6 +832,13 @@ function bindEvents() {
   document.getElementById('btn-filters').addEventListener('click', openSidebar);
   document.getElementById('overlay-sidebar').addEventListener('click', closeSidebar);
   document.getElementById('btn-close-sidebar').addEventListener('click', closeSidebar);
+
+  function onSearchFocus(event) {
+    if (state.view === 'favorites') showSearchView();
+    event.target.select();
+  }
+  document.getElementById('f-name-mob').addEventListener('focus', onSearchFocus);
+  document.getElementById('f-name').addEventListener('focus', onSearchFocus);
 
   document.getElementById('f-name-mob').addEventListener('input', event => {
     document.getElementById('f-name').value = event.target.value;
