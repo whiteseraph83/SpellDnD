@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="robots" content="noindex, nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
 <title>Codice Arcano — D&D 3.5 Database Incantesimi</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@400;700&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
@@ -38,7 +38,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--f-body); font-size: 15px; }
+html, body { height: 100%; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--f-body); font-size: 15px; }
 
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--surface); }
@@ -78,6 +78,7 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
   grid-template-columns: var(--sw) 1fr;
   grid-template-rows: var(--hh) 1fr;
   height: 100vh;
+  height: 100dvh;
 }
 #app.hidden { visibility: hidden; }
 
@@ -378,7 +379,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
   #view-toggle { display: flex; }
 
   /* pager compatto */
-  #pager { padding: .4rem .5rem; gap: .18rem; }
+  #pager { padding: .4rem .5rem calc(.4rem + env(safe-area-inset-bottom, 0px)) .5rem; gap: .18rem; }
   #pg-info { display: none; }
 
   /* drawer full-width su mobile */
