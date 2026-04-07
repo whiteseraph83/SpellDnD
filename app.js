@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.1.1';
+const VERSION = '1.1.2';
 
 let SQL = null;
 let db = null;
@@ -833,6 +833,7 @@ function bindEvents() {
   document.getElementById('btn-filters').addEventListener('click', openSidebar);
   document.getElementById('overlay-sidebar').addEventListener('click', closeSidebar);
   document.getElementById('btn-close-sidebar').addEventListener('click', closeSidebar);
+  document.getElementById('btn-apply').addEventListener('click', closeSidebar);
 
   function onSearchFocus(event) {
     if (state.view === 'favorites') showSearchView();

@@ -157,6 +157,12 @@ select option { background: #1a1409; color: var(--text); }
   background: transparent; border-radius: var(--r); cursor: pointer; width: 100%; transition: all var(--t);
 }
 .btn-clear:hover { border-color: var(--red); color: var(--red); }
+#btn-apply {
+  font-family: var(--f-head); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase;
+  padding: .4rem .8rem; border: 1px solid var(--gold-dm); color: var(--gold);
+  background: var(--gold-glow); border-radius: var(--r); cursor: pointer; width: 100%; transition: all var(--t);
+}
+#btn-apply:hover { border-color: var(--gold); background: rgba(201,168,76,.22); }
 
 /* ══ Preferiti ══ */
 #btn-favorites {
@@ -522,6 +528,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
       </div>
     </div>
 
+    <button id="btn-apply">✔ &nbsp;Applica</button>
     <button class="btn-clear" id="btn-clear">✕ &nbsp;Azzera Filtri</button>
   </aside>
 
@@ -606,7 +613,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
   <div id="d-footer" style="display:none"></div>
 </div>
 
-<script src="app.js?v=1.1.1"></script>
+<script src="app.js?v=1.1.2"></script>
 <script type="application/json" id="legacy-script-disabled">
 'use strict';
 
