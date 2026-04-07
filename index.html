@@ -96,6 +96,7 @@ html, body { height: 100%; height: 100dvh; overflow: hidden; background: var(--b
 }
 .hdr-logo { font-family: var(--f-display); font-size: 1rem; color: var(--gold); letter-spacing: .06em; text-shadow: 0 0 24px rgba(201,168,76,.45); white-space: nowrap; flex-shrink: 0; }
 .hdr-logo em { font-family: var(--f-body); font-style: italic; font-size: .7rem; color: var(--text-m); display: block; letter-spacing: .18em; }
+#app-version { font-family: var(--f-mono); font-size: .58rem; color: var(--text-d); display: block; letter-spacing: .12em; margin-top: .08rem; }
 .hdr-sep { display: none; }
 #hdr-stats { font-family: var(--f-mono); font-size: .72rem; color: var(--text-m); position: absolute; right: 1.4rem; }
 #hdr-stats strong { color: var(--gold); }
@@ -407,7 +408,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
 <div id="app" class="hidden">
 
   <header id="hdr">
-    <div class="hdr-logo">✦ Codice Arcano<em>D&D 3.5 · Database Incantesimi</em></div>
+    <div class="hdr-logo">✦ Codice Arcano<em>D&D 3.5 · Database Incantesimi</em><span id="app-version"></span></div>
     <div class="hdr-sep"></div>
     <div class="lang-switch" id="lang-switch">
       <button class="lang-btn" id="lang-it" data-lang="it" type="button">IT</button>

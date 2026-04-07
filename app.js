@@ -1,5 +1,7 @@
 'use strict';
 
+const VERSION = '1.0.0';
+
 let SQL = null;
 let db = null;
 
@@ -774,6 +776,7 @@ async function init() {
   msg.textContent = 'Inizializzazione…';
   await loadMeta();
   renderLanguageControls();
+  document.getElementById('app-version').textContent = 'v' + VERSION;
 
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('app').classList.remove('hidden');
