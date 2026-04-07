@@ -160,22 +160,26 @@ select option { background: #1a1409; color: var(--text); }
 
 /* ══ Preferiti ══ */
 #btn-favorites {
-  display: flex; align-items: center; gap: .3rem; flex-shrink: 0;
-  padding: .22rem .55rem; border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 28px; height: 28px; border: 1px solid var(--border);
   background: transparent; color: var(--text-m);
-  font-family: var(--f-mono); font-size: .68rem;
-  border-radius: var(--r); cursor: pointer; transition: all var(--t); white-space: nowrap;
+  border-radius: var(--r); cursor: pointer; transition: all var(--t);
 }
 #btn-favorites:hover { border-color: var(--gold-dm); color: var(--gold); }
 #btn-favorites.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
-#fav-count { font-weight: 700; }
 #d-fav-btn {
   background: transparent; border: 1px solid var(--border); color: var(--text-m);
-  width: 26px; height: 26px; border-radius: var(--r); cursor: pointer; font-size: 1rem;
+  width: 26px; height: 26px; border-radius: var(--r); cursor: pointer;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--t);
 }
 #d-fav-btn:hover { border-color: var(--gold-dm); color: var(--gold); }
 #d-fav-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+.ico-bookmark { display: block; }
+#btn-favorites svg, #d-fav-btn svg {
+  fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linejoin: round;
+  transition: fill var(--t), stroke var(--t);
+}
+#btn-favorites.active svg, #d-fav-btn.active svg { fill: currentColor; }
 /* Vista preferiti */
 #favorites-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 #main.favorites-mode #tbl-wrap { display: none !important; }
@@ -536,7 +540,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
         </select>
         per pagina
       </div>
-      <button id="btn-favorites" title="Preferiti">🔖</button>
+      <button id="btn-favorites" title="Preferiti"><svg class="ico-bookmark" width="11" height="14" viewBox="0 0 10 13"><path d="M1 0h8v13l-4-3.2L1 13Z"/></svg></button>
     </div>
 
     <div id="chips"></div>
@@ -592,14 +596,14 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
         <a id="d-ext-link" target="_blank" rel="noopener">↗ <span class="link-label">dndtools.net</span></a>
       </div>
     </div>
-    <button id="d-fav-btn" title="Aggiungi ai preferiti">🔖</button>
+    <button id="d-fav-btn" title="Aggiungi ai preferiti"><svg class="ico-bookmark" width="11" height="14" viewBox="0 0 10 13"><path d="M1 0h8v13l-4-3.2L1 13Z"/></svg></button>
     <button class="d-close" id="d-close">✕</button>
   </div>
   <div class="d-body" id="d-body"></div>
   <div id="d-footer" style="display:none"></div>
 </div>
 
-<script src="app.js?v=1.0.7"></script>
+<script src="app.js?v=1.0.8"></script>
 <script type="application/json" id="legacy-script-disabled">
 'use strict';
 
