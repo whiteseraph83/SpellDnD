@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.0.4';
+const VERSION = '1.0.5';
 
 let SQL = null;
 let db = null;
@@ -98,9 +98,109 @@ const meta = {
   total: 0
 };
 
+/* ══ Preferiti ══ */
+const FAV_KEY = 'dnd35-favorites';
+let favorites = new Set();
+
+function loadFavorites() {
+  try { favorites = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]').map(Number)); }
+  catch (e) { favorites = new Set(); }
+}
+function saveFavorites() {
+  localStorage.setItem(FAV_KEY, JSON.stringify([...favorites]));
+}
+function isFavorite(id) { return favorites.has(+id); }
+function toggleFavorite(id) {
+  id = +id;
+  if (favorites.has(id)) favorites.delete(id); else favorites.add(id);
+  saveFavorites();
+  updateFavBtn(id);
+  updateFavCount();
+  if (state.view === 'favorites') renderFavorites();
+}
+function updateFavBtn(id) {
+  const btn = document.getElementById('d-fav-btn');
+  if (!btn || !id) return;
+  const on = isFavorite(id);
+  btn.textContent = on ? '★' : '☆';
+  btn.classList.toggle('active', on);
+  btn.title = on ? 'Rimuovi dai preferiti' : 'Aggiungi ai preferiti';
+}
+function updateFavCount() {
+  const el = document.getElementById('fav-count');
+  if (el) el.textContent = favorites.size;
+}
+function showFavoritesView() {
+  state.view = 'favorites';
+  document.getElementById('main').classList.add('favorites-mode');
+  document.getElementById('btn-favorites').classList.add('active');
+  renderFavorites();
+}
+function showSearchView() {
+  state.view = 'search';
+  document.getElementById('main').classList.remove('favorites-mode');
+  document.getElementById('btn-favorites').classList.remove('active');
+  fetchSpells();
+}
+function renderFavorites() {
+  const list = document.getElementById('fav-list');
+  if (!favorites.size) {
+    list.innerHTML = `<div id="fav-empty">
+      <div class="e-title">${state.lang === 'it' ? 'Nessun preferito' : 'No favourites yet'}</div>
+      <p>${state.lang === 'it' ? 'Aggiungi incantesimi dai preferiti dalla scheda di dettaglio.' : 'Add spells to favourites from the detail panel.'}</p>
+    </div>`;
+    return;
+  }
+  const ids = [...favorites];
+  const ph = ids.map(() => '?').join(',');
+  const rows = dbQuery(`
+    SELECT s.id, s.name, s.school,
+           s.rulebook, s.rulebooks, s.rulebooks_full,
+           s.level, s.components, s.casting_time, s.saving_throw,
+           (SELECT GROUP_CONCAT(sc2.class_name || ' ' || sc2.level, '|')
+            FROM spell_classes sc2 WHERE sc2.spell_id = s.id
+            ORDER BY sc2.class_name) AS class_levels_raw
+    FROM spells s
+    WHERE s.id IN (${ph}) AND s.lang = ?
+    ORDER BY s.name COLLATE NOCASE
+  `, [...ids, state.lang]);
+
+  if (isMobile()) {
+    list.innerHTML = '<div style="padding:.6rem .75rem">' + rows.map(s =>
+      `<div class="spell-card${s.id === state.selectedId ? ' sel' : ''}" data-id="${s.id}" style="margin-bottom:6px">
+        <div class="card-top">
+          <span class="card-title">${esc(s.name)}</span>
+          ${badge(s.school)}
+        </div>
+        <div class="card-meta">${esc(formatClassLevels(s.class_levels_raw, state.lang, true))}</div>
+      </div>`
+    ).join('') + '</div>';
+  } else {
+    list.innerHTML = `<table>
+      <thead><tr>
+        <th>Nome</th><th>Scuola</th><th>Manuale</th><th>Livello</th><th>Componenti</th><th>Tempo di Lancio</th>
+      </tr></thead>
+      <tbody>${rows.map(s => `
+        <tr data-id="${s.id}"${s.id === state.selectedId ? ' class="sel"' : ''}>
+          <td class="c-name" title="${esc(s.name)}">${esc(s.name)}</td>
+          <td>${badge(s.school)}</td>
+          <td class="c-rb" title="${esc(s.rulebooks_full || s.rulebook || '')}">${esc(s.rulebooks || s.rulebook || '—')}</td>
+          <td class="c-mono">${esc(formatClassLevels(s.class_levels_raw, state.lang, true))}</td>
+          <td class="c-mono">${esc(s.components || '—')}</td>
+          <td class="c-mono">${esc(normalizeTerm(s.casting_time) || '—')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+  list.querySelectorAll('[data-id]').forEach(el =>
+    el.addEventListener('click', () => openDrawer(+el.dataset.id))
+  );
+}
+
 const state = {
   lang: 'en',
   drawerLang: 'en',
+  view: 'search',
   page: 1,
   perPage: 25,
   sort: 'name',
@@ -525,6 +625,7 @@ function openDrawer(id, lang = state.lang) {
   document.querySelectorAll('.spell-card').forEach(card => {
     card.classList.toggle('sel', +card.dataset.id === id);
   });
+  updateFavBtn(id);
   document.getElementById('overlay').classList.add('open');
   document.getElementById('drawer').classList.add('open');
   document.getElementById('d-name').textContent = state.lang === 'it' ? 'Caricamento…' : 'Loading…';
@@ -718,6 +819,13 @@ function bindEvents() {
 
   document.getElementById('overlay').addEventListener('click', closeDrawer);
   document.getElementById('d-close').addEventListener('click', closeDrawer);
+  document.getElementById('d-fav-btn').addEventListener('click', () => {
+    if (state.selectedId) toggleFavorite(state.selectedId);
+  });
+  document.getElementById('btn-favorites').addEventListener('click', () => {
+    if (state.view === 'favorites') showSearchView(); else showFavoritesView();
+  });
+  document.getElementById('btn-back-search').addEventListener('click', showSearchView);
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape') {
       closeDrawer();
@@ -775,6 +883,8 @@ async function init() {
 
   msg.textContent = 'Inizializzazione…';
   await loadMeta();
+  loadFavorites();
+  updateFavCount();
   renderLanguageControls();
   document.getElementById('app-version').textContent = 'v' + VERSION;
 

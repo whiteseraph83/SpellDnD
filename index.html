@@ -158,6 +158,48 @@ select option { background: #1a1409; color: var(--text); }
 }
 .btn-clear:hover { border-color: var(--red); color: var(--red); }
 
+/* ══ Preferiti ══ */
+#btn-favorites {
+  display: flex; align-items: center; gap: .3rem; flex-shrink: 0;
+  padding: .22rem .55rem; border: 1px solid var(--border);
+  background: transparent; color: var(--text-m);
+  font-family: var(--f-mono); font-size: .68rem;
+  border-radius: var(--r); cursor: pointer; transition: all var(--t); white-space: nowrap;
+}
+#btn-favorites:hover { border-color: var(--gold-dm); color: var(--gold); }
+#btn-favorites.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+#fav-count { font-weight: 700; }
+#d-fav-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-m);
+  width: 26px; height: 26px; border-radius: var(--r); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all var(--t);
+}
+#d-fav-btn:hover { border-color: var(--gold-dm); color: var(--gold); }
+#d-fav-btn.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+/* Vista preferiti */
+#favorites-view { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+#main.favorites-mode #tbl-wrap { display: none !important; }
+#main.favorites-mode #cards    { display: none !important; }
+#main.favorites-mode #pager    { display: none !important; }
+#main.favorites-mode #chips    { display: none !important; }
+#main.favorites-mode #favorites-view { display: flex; }
+#fav-header {
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  padding: .55rem .9rem; background: var(--surface); border-bottom: 1px solid var(--border-g);
+}
+#fav-title { font-family: var(--f-head); font-size: .75rem; color: var(--gold); letter-spacing: .14em; text-transform: uppercase; }
+#btn-back-search {
+  font-family: var(--f-mono); font-size: .68rem; color: var(--text-m);
+  background: transparent; border: 1px solid var(--border);
+  padding: .22rem .55rem; border-radius: var(--r); cursor: pointer; transition: all var(--t);
+}
+#btn-back-search:hover { border-color: var(--gold-dm); color: var(--gold); }
+#fav-list { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+#fav-list table { width: 100%; border-collapse: collapse; }
+#fav-empty { text-align: center; padding: 4rem 2rem; }
+#fav-empty .e-title { font-family: var(--f-head); font-size: 1.1rem; color: var(--text-d); margin-bottom: .5rem; }
+#fav-empty p { font-size: .85rem; color: var(--text-m); font-style: italic; }
+
 /* ══ Main ══ */
 #main { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
 
@@ -494,6 +536,7 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
         </select>
         per pagina
       </div>
+      <button id="btn-favorites">★ <span id="fav-count">0</span></button>
     </div>
 
     <div id="chips"></div>
@@ -516,6 +559,14 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
       </table>
     </div>
     <div id="cards"></div>
+
+    <div id="favorites-view">
+      <div id="fav-header">
+        <span id="fav-title">★ Preferiti</span>
+        <button id="btn-back-search">← Risultati di Ricerca</button>
+      </div>
+      <div id="fav-list"></div>
+    </div>
 
     <div id="pager">
       <button class="pg-btn" id="btn-prev">‹</button>
@@ -541,13 +592,14 @@ tbody tr.sel { background: rgba(201,168,76,.07); }
         <a id="d-ext-link" target="_blank" rel="noopener">↗ <span class="link-label">dndtools.net</span></a>
       </div>
     </div>
+    <button id="d-fav-btn" title="Aggiungi ai preferiti">☆</button>
     <button class="d-close" id="d-close">✕</button>
   </div>
   <div class="d-body" id="d-body"></div>
   <div id="d-footer" style="display:none"></div>
 </div>
 
-<script src="app.js?v=1.0.4"></script>
+<script src="app.js?v=1.0.5"></script>
 <script type="application/json" id="legacy-script-disabled">
 'use strict';
 
