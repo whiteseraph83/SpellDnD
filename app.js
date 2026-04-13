@@ -1,6 +1,6 @@
 'use strict';
 
-const VERSION = '1.1.3';
+const VERSION = '1.1.5';
 
 let SQL = null;
 let db = null;
@@ -206,7 +206,7 @@ const state = {
   selectedId: null,
   timer: null,
   cardView: 'mini',
-  f: { name: '', school: '', class_name: '', level_min: '', level_max: '', rulebook: '', comps: [] }
+  f: { name: '', desc: '', school: '', class_name: '', level_min: '', level_max: '', rulebook: '', casting_time: '', comps: [] }
 };
 
 const SORT_COLS = {
@@ -307,6 +307,7 @@ function setButtonGroupActive(selector, lang) {
 function renderLanguageControls() {
   setButtonGroupActive('#lang-switch .lang-btn', state.lang);
   setButtonGroupActive('#drawer-lang-switch .lang-btn', state.drawerLang);
+  document.getElementById('f-name').placeholder = state.lang === 'it' ? 'es. Palla di Fuoco…' : 'es. Fireball…';
 }
 
 function renderMetaOptions() {
@@ -326,6 +327,7 @@ function renderMetaOptions() {
   fill('f-school', meta.schools, value => tSchool(value), state.lang === 'it' ? '— Tutte le Scuole —' : '— All Schools —');
   fill('f-rulebook', meta.rulebooks, value => value, state.lang === 'it' ? '— Tutti i Manuali —' : '— All Sources —');
   fill('f-class', meta.classes, value => tClass(value), state.lang === 'it' ? '— Tutte le Classi —' : '— All Classes —');
+  fill('f-casting-time', meta.castingTimes, value => normalizeTerm(value), state.lang === 'it' ? '— Tutti i Tempi —' : '— All Times —');
 
   document.getElementById('hdr-stats').innerHTML =
     state.lang === 'it'
@@ -344,6 +346,10 @@ function buildWhere() {
   if (f.name) {
     conds.push('s.name LIKE ?');
     params.push(`%${f.name}%`);
+  }
+  if (f.desc) {
+    conds.push('s.description LIKE ?');
+    params.push(`%${f.desc}%`);
   }
   if (f.school) {
     conds.push('s.school = ?');
@@ -372,6 +378,10 @@ function buildWhere() {
     useRulebookJoin = true;
     conds.push('sr.rulebook_full = ?');
     params.push(f.rulebook);
+  }
+  if (f.casting_time) {
+    conds.push('LOWER(s.casting_time) = LOWER(?)');
+    params.push(f.casting_time);
   }
 
   const join = [
@@ -550,11 +560,13 @@ function renderChips() {
   const chips = [];
   const { f } = state;
   if (f.name) chips.push({ t: `${state.lang === 'it' ? 'Nome' : 'Name'}: ${f.name}`, k: 'name' });
+  if (f.desc) chips.push({ t: `${state.lang === 'it' ? 'Descr' : 'Desc'}: ${f.desc.length > 18 ? f.desc.slice(0, 16) + '…' : f.desc}`, k: 'desc' });
   if (f.school) chips.push({ t: `${state.lang === 'it' ? 'Scuola' : 'School'}: ${tSchool(f.school)}`, k: 'school' });
   if (f.class_name) chips.push({ t: `${state.lang === 'it' ? 'Classe' : 'Class'}: ${tClass(f.class_name)}`, k: 'class_name' });
   if (f.level_min !== '') chips.push({ t: `${state.lang === 'it' ? 'Livello' : 'Level'} ≥ ${f.level_min}`, k: 'level_min' });
   if (f.level_max !== '') chips.push({ t: `${state.lang === 'it' ? 'Livello' : 'Level'} ≤ ${f.level_max}`, k: 'level_max' });
   if (f.rulebook) chips.push({ t: f.rulebook.length > 24 ? `${f.rulebook.slice(0, 22)}…` : f.rulebook, k: 'rulebook' });
+  if (f.casting_time) chips.push({ t: `${state.lang === 'it' ? 'Tempo' : 'Time'}: ${normalizeTerm(f.casting_time)}`, k: 'casting_time' });
   f.comps.forEach(comp => chips.push({ t: `Comp: ${comp}`, k: `comp:${comp}` }));
 
   if (!chips.length) {
@@ -581,11 +593,13 @@ function removeFilter(key) {
     state.f[key] = '';
     const ids = {
       name: 'f-name',
+      desc: 'f-desc',
       school: 'f-school',
       class_name: 'f-class',
       level_min: 'f-lmin',
       level_max: 'f-lmax',
-      rulebook: 'f-rulebook'
+      rulebook: 'f-rulebook',
+      casting_time: 'f-casting-time'
     };
     const el = document.getElementById(ids[key]);
     if (el) el.value = '';
@@ -707,6 +721,11 @@ async function loadMeta() {
     ORDER BY rulebook_full
   `).map(row => row.rulebook_full);
   meta.classes = dbQuery('SELECT DISTINCT class_name FROM spell_classes ORDER BY class_name').map(row => row.class_name);
+  meta.castingTimes = dbQuery(`
+    SELECT DISTINCT LOWER(casting_time) AS ct, COUNT(*) AS n
+    FROM spells WHERE lang = 'en' AND casting_time IS NOT NULL AND casting_time != '' AND casting_time != 'None'
+    GROUP BY LOWER(casting_time) ORDER BY n DESC
+  `).map(row => row.ct);
   meta.total = dbScalar("SELECT COUNT(*) FROM spells WHERE lang = 'en'");
   renderMetaOptions();
 }
@@ -726,9 +745,11 @@ function setLanguage(lang) {
 
 function bindEvents() {
   document.getElementById('f-name').addEventListener('input', event => setFilter('name', event.target.value));
+  document.getElementById('f-desc').addEventListener('input', event => setFilter('desc', event.target.value));
   document.getElementById('f-school').addEventListener('change', event => setFilter('school', event.target.value, true));
   document.getElementById('f-rulebook').addEventListener('change', event => setFilter('rulebook', event.target.value, true));
   document.getElementById('f-class').addEventListener('change', event => setFilter('class_name', event.target.value, true));
+  document.getElementById('f-casting-time').addEventListener('change', event => setFilter('casting_time', event.target.value, true));
   document.getElementById('f-lmin').addEventListener('input', event => setFilter('level_min', event.target.value));
   document.getElementById('f-lmax').addEventListener('input', event => setFilter('level_max', event.target.value));
 
@@ -792,8 +813,8 @@ function bindEvents() {
   });
 
   document.getElementById('btn-clear').addEventListener('click', () => {
-    state.f = { name: '', school: '', class_name: '', level_min: '', level_max: '', rulebook: '', comps: [] };
-    ['f-name', 'f-school', 'f-rulebook', 'f-class', 'f-lmin', 'f-lmax'].forEach(id => {
+    state.f = { name: '', desc: '', school: '', class_name: '', level_min: '', level_max: '', rulebook: '', casting_time: '', comps: [] };
+    ['f-name', 'f-desc', 'f-school', 'f-rulebook', 'f-class', 'f-lmin', 'f-lmax', 'f-casting-time'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
